@@ -1,0 +1,2 @@
+class BadCurrencyCode(Exception):
+    pass

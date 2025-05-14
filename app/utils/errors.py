@@ -1,0 +1,2 @@
+class CurrencyNotAvailableError(Exception):
+    pass
