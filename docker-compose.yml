@@ -9,7 +9,7 @@ services:
       - POSTGRES_PASSWORD=password
       - PGDATA=/var/lib/postgres/data/pgdata
     volumes:
-      - .:/var/lib/postgres/data
+      - /home/user/docker/volumes:/var/lib/postgres/data
     ports:
       - "5432:5432"
     deploy:

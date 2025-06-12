@@ -9,7 +9,7 @@ async def get_currency():
     async with ClientSession() as client:
         async with client.get(url=url) as responce:
             if responce.status==200:
-                return await responce.json()
+                return await responce.json(content_type="application/javascript", encoding="utf-8")
             else:
                 raise CurrencyNotAvailableError()
 

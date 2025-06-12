@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
+from app.api.schemas.user import UserIn
 
 mock_currency_json = {
     "Valute": {
@@ -36,7 +37,7 @@ def mock_external_api(mock_get):
 
 @pytest.mark.asyncio
 @patch("aiohttp.ClientSession.get")
-async def test_get_currency_list(mock_get: MagicMock, access_token: str, client: AsyncClient):
+async def test_get_currency_list(mock_get: MagicMock, access_token: str, client: AsyncClient, user:UserIn):
     mock_external_api(mock_get)
     response = await client.get('/currency/list',
                                 headers={"Authorization": f"Bearer {access_token}"})
@@ -48,7 +49,7 @@ async def test_get_currency_list(mock_get: MagicMock, access_token: str, client:
 
 @pytest.mark.asyncio
 @patch("aiohttp.ClientSession.get")
-async def test_exchange_currency(mock_get: MagicMock, access_token: str, client: AsyncClient):
+async def test_exchange_currency(mock_get: MagicMock, access_token: str, client: AsyncClient, user:UserIn):
     mock_external_api(mock_get)
     from_ = "usd"
     to = "eur"
@@ -62,7 +63,7 @@ async def test_exchange_currency(mock_get: MagicMock, access_token: str, client:
 
 @pytest.mark.asyncio
 @patch("aiohttp.ClientSession.get")
-async def test_exchange_bad_currency(mock_get: MagicMock, access_token: str, client: AsyncClient):
+async def test_exchange_bad_currency(mock_get: MagicMock, access_token: str, client: AsyncClient, user:UserIn):
     mock_external_api(mock_get)
     from_ = "QWE"
     to = "eur"
