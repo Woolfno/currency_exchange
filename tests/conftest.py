@@ -1,17 +1,30 @@
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from pydantic_settings import SettingsConfigDict
 from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
                                     create_async_engine)
 from sqlalchemy.pool import NullPool
 
 from app.api.models.user import User
 from app.api.schemas.user import UserIn
+from app.core.config import Settings, get_settings
 from app.core.security import create_access_token, get_password_hash
 from app.database.db import Base, get_async_session
 from main import app
 
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@vm:5432/test_db"
+
+def override_get_settings() -> Settings:
+    class TestSettings(Settings):
+        model_config = SettingsConfigDict(
+            env_file='tests/.env', env_file_encoding='utf-8')
+    return TestSettings()
+
+
+app.dependency_overrides[get_settings] = override_get_settings
+config = override_get_settings()
+
+TEST_DATABASE_URL = f"postgresql+asyncpg://{config.db_user}:{config.db_pass}@{config.db_host}:{config.db_port}/{config.db_name}"
 
 async_engine = create_async_engine(
     TEST_DATABASE_URL, echo=True, poolclass=NullPool)
@@ -55,12 +68,14 @@ async def client(async_session):
 @pytest_asyncio.fixture(scope="function")
 async def user(async_session: AsyncSession):
     u = UserIn(username="user", password="12345")
-    user_db = User(username=u.username, password=get_password_hash(u.password))
-    async_session.add(user_db)
+    user = User(username=u.username, password=get_password_hash(u.password))
+    async_session.add(user)
     await async_session.commit()
-    await async_session.refresh(user_db)
+    await async_session.refresh(user)
+
     yield u
-    await async_session.delete(user_db)
+
+    await async_session.delete(user)
     await async_session.commit()
 
 
