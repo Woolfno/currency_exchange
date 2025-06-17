@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 
 from app.api.models.user import User
 from app.api.services.user import UserService, get_user_service
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -19,7 +19,7 @@ def verify_password(password, hash)->bool:
 def get_password_hash(password)->str:
     return pwd_context.hash(password)
 
-async def authenticate(username:str, password:str, service:UserService)->User:
+async def authenticate(username:str, password:str, service:UserService)->User|None:
     u = await service.get_by_username(username)
     if u is None:
         return None
@@ -34,13 +34,14 @@ def create_access_token(data:dict, expires_delta:timedelta|None=None)->str:
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=10)
     to_encode.update({'exp':expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, get_settings().SECRET_KEY, algorithm=get_settings().ALGORITHM)
     return encoded_jwt
 
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 async def get_current_user(token:Annotated[str, Depends(oauth2_schema)], 
-                           service:Annotated[UserService, Depends(get_user_service)]):
+                           service:Annotated[UserService, Depends(get_user_service)],
+                           settings:Annotated[Settings, Depends(get_settings)]):
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                           detail="Could not validate credentials",
                                           headers={"WWW-Authenticate":"Bearer"})
