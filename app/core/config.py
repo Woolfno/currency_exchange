@@ -7,15 +7,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8")
 
-    db_host: str
-    db_port: str
-    db_user: str
-    db_pass: str
-    db_name: str
+    db_host: str = "localhost"
+    db_port: str = "5432"
+    db_user: str = ""
+    db_pass: str = ""
+    db_name: str = ""
 
-    SECRET_KEY: str
-    ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE: int
+    SECRET_KEY: str = ""
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE: int = 10
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
