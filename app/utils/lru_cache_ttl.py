@@ -8,7 +8,7 @@ def lru_cache_ttl(maxsize=128, typed=False, ttl_delta: timedelta = timedelta(hou
     def decorator(func):
         cache = dict()
 
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             key = functools._make_key(args, kwargs, typed)
 
             current_time = time.time()
@@ -18,7 +18,7 @@ def lru_cache_ttl(maxsize=128, typed=False, ttl_delta: timedelta = timedelta(hou
                     return value
                 else:
                     del cache[key]
-            result = func(*args, **kwargs)
+            result = await func(*args, **kwargs)
             cache[key] = (result, (datetime.now() + ttl_delta).timestamp())
             return result
 
