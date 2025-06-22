@@ -26,7 +26,7 @@ class ExchangeService:
         to_value = self._storage.get(to)
         if to_value is None:
             raise BadCurrencyCode(f"bad currency code: {to}")
-        return Decimal(from_value) / Decimal(to_value) * Decimal(value)
+        return Decimal(from_value["Value"]) / Decimal(to_value["Value"]) * Decimal(value)
 
     def available_currency(self) -> list[Currency]:
         result = []
