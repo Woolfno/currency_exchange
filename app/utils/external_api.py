@@ -1,10 +1,15 @@
 import json
 import pathlib
+import inspect
+from datetime import timedelta
+from functools import lru_cache
 from aiohttp import ClientSession
 from app.utils.errors import CurrencyNotAvailableError
+from app.utils.lru_cache_ttl import lru_cache_ttl
 
 url = 'https://www.cbr-xml-daily.ru/daily_json.js'
 
+@lru_cache_ttl(ttl_delta=timedelta(minutes=30))
 async def get_currency():
     async with ClientSession() as client:
         async with client.get(url=url) as responce:
