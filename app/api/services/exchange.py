@@ -4,47 +4,37 @@ from app.api.schemas.currency import Currency
 from app.api.services.errors import BadCurrencyCode
 from app.utils.external_api import get_currency
 
-storage = dict()
 
 class ExchangeService:
-    @staticmethod
-    def _save(data):
-        for key, value in data.items():
-            storage[key] = value
+    def __init__(self) -> None:
+        self._storage = dict()
 
-    @staticmethod
-    async def _currency(code:str)->float|None:
-        if len(storage)==0:       
-            currency_json = await get_currency()   
-            ExchangeService._save(currency_json["Valute"])
+    async def load_currency(self) -> None:
+        currencies = dict()
+        currency_json = await get_currency()        
+        for key, value in currency_json["Valute"].items():
+            currencies[key] = value
+        self._storage = currencies
 
-        currencies = storage
-        currency = currencies.get(code.upper())
-        if currency is None:
-            return None
-        c = float(currency["Value"])
-        return c
-
-    @staticmethod
-    async def exchange(from_: str, to:str, value:float)->float:
+    def exchange(self, from_: str, to: str, value: float) -> float:
         from_ = from_.upper()
         to = to.upper()
         getcontext().prec = 2
-        from_value = await ExchangeService._currency(from_)
+        from_value = self._storage.get(from_)
         if from_value is None:
             raise BadCurrencyCode(f"bad currency code: {from_}")
-        to_value = await ExchangeService._currency(to)
+        to_value = self._storage.get(to)
         if to_value is None:
             raise BadCurrencyCode(f"bad currency code: {to}")
         return Decimal(from_value) / Decimal(to_value) * Decimal(value)
-    
-    @staticmethod
-    async def available_currency()->list[Currency]:
-        if len(storage)==0:
-            currency_json = await get_currency()   
-            ExchangeService._save(currency_json["Valute"])
 
+    def available_currency(self) -> list[Currency]:
         result = []
-        for key, value in storage.items():
+        for key, value in self._storage.items():
             result.append(Currency(code=key, name=value["Name"]))
         return result
+
+async def get_exchange_service()->ExchangeService:
+    service = ExchangeService()
+    await service.load_currency()
+    return service
